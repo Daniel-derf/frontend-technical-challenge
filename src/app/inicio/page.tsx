@@ -1,21 +1,15 @@
-import { User } from "../../@type/user";
+import { getUsers } from "../../services/getUsers";
 import ListUsers from "../../components/ListUsers";
 
 export default async function Inicio() {
-  const users: User[] = await getUsers();
+  const { data: users } = await getUsers({ page: 1, limit: 10 });
+
+  console.log("users: ", users);
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div>
       <h1>Usuários disponíveis:</h1>
       <ListUsers initialData={users} />
     </div>
   );
-}
-
-async function getUsers() {
-  const res = await fetch("/api/users");
-  if (!res.ok) {
-    throw new Error("Failed to fetch users");
-  }
-  return res.json();
 }

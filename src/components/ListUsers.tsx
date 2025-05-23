@@ -6,11 +6,13 @@ export default function ListUsers(props: { initialData?: User[] }) {
   return (
     <>
       {users?.map((user) => {
-        <div>
-          <h1>
-            {user.firstName} {user.lastName}
-          </h1>
-        </div>;
+        return (
+          <div key={user.id}>
+            <h1>
+              {user.firstName} {user.lastName}
+            </h1>
+          </div>
+        );
       })}
     </>
   );
