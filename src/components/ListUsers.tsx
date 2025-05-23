@@ -61,6 +61,9 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
     isActive: true,
   });
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editUserData, setEditUserData] = useState<User | null>(null);
+
   const users = usersQuery.data;
   const profiles = profilesQuery.data;
 
@@ -97,9 +100,12 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
             <div className="flex flex-col gap-2">
               <button
                 className="px-3 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded transition cursor-pointer"
-                onClick={() => updateMutation.mutate({ ...user, firstName: user.firstName + "!" })}
+                onClick={() => {
+                  setEditUserData(user);
+                  setIsEditModalOpen(true);
+                }}
               >
-                Atualizar
+                Editar
               </button>
 
               <button
@@ -121,6 +127,64 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
           </div>
         ))}
       </div>
+
+      {isEditModalOpen && editUserData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg w-96 space-y-4">
+            <h2 className="text-xl font-bold text-gray-900">Editar Usuário</h2>
+
+            <input
+              type="text"
+              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-900"
+              value={editUserData.firstName}
+              onChange={(e) => setEditUserData({ ...editUserData, firstName: e.target.value })}
+            />
+            <input
+              type="text"
+              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-900"
+              value={editUserData.lastName}
+              onChange={(e) => setEditUserData({ ...editUserData, lastName: e.target.value })}
+            />
+            <input
+              type="email"
+              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-900"
+              value={editUserData.email}
+              onChange={(e) => setEditUserData({ ...editUserData, email: e.target.value })}
+            />
+
+            <select
+              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-900"
+              value={editUserData.profileId}
+              onChange={(e) => setEditUserData({ ...editUserData, profileId: e.target.value })}
+            >
+              <option value="">Selecione um perfil</option>
+              {profiles?.map((profile) => (
+                <option key={profile.id} value={profile.id}>
+                  {profile.name}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded transition cursor-pointer"
+                onClick={() => setIsEditModalOpen(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition cursor-pointer"
+                onClick={() => {
+                  updateMutation.mutate(editUserData);
+                  setIsEditModalOpen(false);
+                }}
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <h2 className="text-xl font-bold mb-4 text-gray-900">Criar novo usuário</h2>
       <div className="flex flex-col gap-3">
