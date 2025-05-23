@@ -11,7 +11,5 @@ export async function getProfiles(): Promise<Profile[]> {
 
   const profiles: Profile[] = await res.json();
 
-  console.log("profiles: ", profiles);
-
   return profiles;
 }

@@ -17,11 +17,15 @@ export async function getUsers({ page = 1, limit = 10 }: { page?: number; limit?
 }
 
 export async function createUser(user: Omit<User, "id">): Promise<User> {
+  console.log("body: ", JSON.stringify(user));
+
   const res = await fetch(`${baseUrl}/users`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(user),
   });
+
+  console.log("res: ", res);
 
   if (!res.ok) {
     throw new Error("Erro ao criar usuário");

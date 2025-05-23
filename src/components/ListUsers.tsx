@@ -17,6 +17,7 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
     queryKey: ["users", page, limit],
     queryFn: () => getUsers({ page, limit }),
     initialData,
+    refetchOnMount: "always",
   });
 
   const profilesQuery = useQuery<Profile[]>({
@@ -26,29 +27,29 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
 
   const createMutation = useMutation({
     mutationFn: createUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"], exact: false });
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: updateUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"], exact: false });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"], exact: false });
     },
   });
 
   const switchStatusMutation = useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => switchUserStatus(id, isActive),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"], exact: false });
     },
   });
 
@@ -56,8 +57,8 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
     firstName: "",
     lastName: "",
     email: "",
-    isActive: false,
     profileId: "",
+    isActive: true,
   });
 
   const users = usersQuery.data;
@@ -157,15 +158,6 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
             </option>
           ))}
         </select>
-
-        <label className="flex items-center gap-2 text-gray-800">
-          <input
-            type="checkbox"
-            checked={newUser.isActive}
-            onChange={(e) => setNewUser({ ...newUser, isActive: e.target.checked })}
-          />
-          Ativo
-        </label>
 
         <button
           className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition cursor-pointer"
