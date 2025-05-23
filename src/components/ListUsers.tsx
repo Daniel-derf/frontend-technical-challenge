@@ -33,7 +33,7 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: updateUser,
+    mutationFn: ({ userData, userId }: { userData: Partial<User>; userId: string }) => updateUser(userData, userId),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["users"], exact: false });
     },
@@ -128,6 +128,7 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
         ))}
       </div>
 
+      {/* Modal de edição */}
       {isEditModalOpen && editUserData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-lg w-96 space-y-4">
@@ -175,8 +176,11 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
               <button
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition cursor-pointer"
                 onClick={() => {
-                  updateMutation.mutate(editUserData);
-                  setIsEditModalOpen(false);
+                  if (editUserData) {
+                    const { id, firstName, lastName, email, profileId } = editUserData;
+                    updateMutation.mutate({ userData: { firstName, lastName, email, profileId }, userId: id });
+                    setIsEditModalOpen(false);
+                  }
                 }}
               >
                 Salvar

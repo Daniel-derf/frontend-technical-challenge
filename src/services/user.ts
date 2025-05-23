@@ -34,12 +34,14 @@ export async function createUser(user: Omit<User, "id">): Promise<User> {
   return res.json();
 }
 
-export async function updateUser(user: User): Promise<User> {
-  const res = await fetch(`${baseUrl}/users/${user.id}`, {
+export async function updateUser(userData: Partial<User>, userId: string): Promise<User> {
+  const res = await fetch(`${baseUrl}/users/${userId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(user),
+    body: JSON.stringify(userData),
   });
+
+  console.log("body: ", JSON.stringify(userData));
 
   if (!res.ok) {
     throw new Error("Erro ao atualizar usuário");
