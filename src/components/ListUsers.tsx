@@ -10,27 +10,28 @@ import { Profile } from "../@type/profile";
 export default function ListUsers({ initialData }: { initialData: User[] }) {
   const queryClient = useQueryClient();
 
-  const page = 1;
-  const limit = 999;
+  const [page, setPage] = useState(1);
+  const limit = 5;
 
-  const usersQuery = useQuery<User[]>({
-    queryKey: ["users", page, limit],
-    queryFn: () => getUsers({ page, limit }),
-    initialData,
-    refetchOnMount: "always",
-  });
+  const [selectedFilter, setSelectedFilter] = useState<string>("todos");
 
   const profilesQuery = useQuery<Profile[]>({
     queryKey: ["profiles"],
     queryFn: getProfiles,
   });
 
-  const [selectedFilter, setSelectedFilter] = useState<string>("todos");
-
   const profiles = profilesQuery.data;
 
+  const usersQuery = useQuery<User[]>({
+    queryKey: ["users", selectedFilter, page, limit],
+    queryFn: () => getUsers({ page, limit }),
+    initialData,
+    refetchOnMount: "always",
+    enabled: selectedFilter === "todos",
+  });
+
   const filteredUsersQuery = useQuery<User[]>({
-    queryKey: ["usersByProfiles", selectedFilter],
+    queryKey: ["usersByProfiles", selectedFilter, page, limit],
     queryFn: () => {
       if (!profiles) return Promise.resolve([]);
       const selectedProfile = profiles.find((p) => p.name.toLowerCase() === selectedFilter);
@@ -43,32 +44,28 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
   const createMutation = useMutation({
     mutationFn: createUser,
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["usersByProfiles"] });
+      queryClient.invalidateQueries();
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ userData, userId }: { userData: Partial<User>; userId: string }) => updateUser(userData, userId),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["usersByProfiles"] });
+      queryClient.invalidateQueries();
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteUser,
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["usersByProfiles"] });
+      queryClient.invalidateQueries();
     },
   });
 
   const switchStatusMutation = useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => switchUserStatus(id, isActive),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["usersByProfiles"] });
+      queryClient.invalidateQueries();
     },
   });
 
@@ -85,15 +82,24 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
 
   const users = selectedFilter === "todos" ? usersQuery.data : filteredUsersQuery.data;
 
-  if ((filteredUsersQuery.isLoading && selectedFilter !== "todos") || usersQuery.isLoading || profilesQuery.isLoading)
-    return <div className="text-center py-8 text-lg text-gray-800">Carregando...</div>;
+  const isLoading =
+    (filteredUsersQuery.isLoading && selectedFilter !== "todos") || usersQuery.isLoading || profilesQuery.isLoading;
 
-  if (
+  const isError =
     (filteredUsersQuery.error instanceof Error && selectedFilter !== "todos") ||
     usersQuery.error instanceof Error ||
-    profilesQuery.error instanceof Error
-  )
+    profilesQuery.error instanceof Error;
+
+  if (isLoading) {
+    return <div className="text-center py-8 text-lg text-gray-800">Carregando...</div>;
+  }
+
+  if (isError) {
     return <div className="text-red-600 text-center py-8">Erro ao carregar dados.</div>;
+  }
+
+  const handleNextPage = () => setPage((prev) => prev + 1);
+  const handlePrevPage = () => setPage((prev) => Math.max(prev - 1, 1));
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -104,7 +110,10 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
         <select
           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-900"
           value={selectedFilter}
-          onChange={(e) => setSelectedFilter(e.target.value)}
+          onChange={(e) => {
+            setSelectedFilter(e.target.value);
+            setPage(1); // resetar para a primeira página ao mudar filtro
+          }}
         >
           <option value="todos">Todos</option>
           <option value="admin">Admin</option>
@@ -161,6 +170,24 @@ export default function ListUsers({ initialData }: { initialData: User[] }) {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="flex justify-between mb-6">
+        <button
+          className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded transition"
+          onClick={handlePrevPage}
+          disabled={page === 1}
+        >
+          Anterior
+        </button>
+        <span className="self-center">Página {page}</span>
+        <button
+          className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded transition"
+          onClick={handleNextPage}
+          disabled={(users?.length ?? 0) < limit}
+        >
+          Próximo
+        </button>
       </div>
 
       {isEditModalOpen && editUserData && (
