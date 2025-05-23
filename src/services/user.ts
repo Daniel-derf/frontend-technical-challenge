@@ -13,8 +13,6 @@ export async function getUsers({ page = 1, limit = 10 }: { page?: number; limit?
 
   const users = output.data;
 
-  console.log("users: ", users);
-
   return users;
 }
 
