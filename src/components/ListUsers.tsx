@@ -3,40 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "../@type/user";
 import { useState } from "react";
-import { getUsers } from "../services/getUsers";
-
-async function createUser(user: Omit<User, "id">): Promise<User> {
-  const res = await fetch("/api/users", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(user),
-  });
-  if (!res.ok) {
-    throw new Error("Erro ao criar usuário");
-  }
-  return res.json();
-}
-
-async function updateUser(user: User): Promise<User> {
-  const res = await fetch(`/api/users/${user.id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(user),
-  });
-  if (!res.ok) {
-    throw new Error("Erro ao atualizar usuário");
-  }
-  return res.json();
-}
-
-async function deleteUser(id: string): Promise<void> {
-  const res = await fetch(`/api/users/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) {
-    throw new Error("Erro ao deletar usuário");
-  }
-}
+import { createUser, deleteUser, getUsers, updateUser } from "../services/user";
 
 export default function ListUsers({ initialData }: { initialData: User[] }) {
   const queryClient = useQueryClient();

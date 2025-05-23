@@ -1,4 +1,4 @@
-import { getUsers } from "../../services/getUsers";
+import { getUsers } from "../../services/user";
 import ListUsers from "../../components/ListUsers";
 
 export default async function Inicio() {
